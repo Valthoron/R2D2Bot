@@ -66,7 +66,7 @@ class RollResult:
 
 
 def roll(dice: str):
-    pattern = r'(\d+)\s*d\s*(?:\+\s*(\d+))?(?:\s+(.+))?$'
+    pattern = r'(\d+)\s*[dD]\s*(?:\+\s*(\d+))?(?:\s+(.+))?$'
     match = re.match(pattern, dice)
     if match:
         die_count = int(match.group(1))

@@ -42,7 +42,7 @@ class Dice(commands.Cog):
         
     @staticmethod
     def _is_d6_command(dice: str) -> bool:
-        pattern = r'^\d+\s*d\s*(?:\+\s*\d+)?(?:\s+.+)?$'
+        pattern = r'^\d+\s*[dD]\s*(?:\+\s*\d+)?(?:\s+.+)?$'
         
         if re.match(pattern, dice):
             return True
