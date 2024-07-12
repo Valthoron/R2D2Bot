@@ -1,8 +1,10 @@
+import re
+
 import d20
 
 from discord.ext import commands
 
-from game.dice import CriticalType, roll
+from game.dice import roll
 
 
 class VerboseMDStringifier(d20.MarkdownStringifier):
@@ -27,48 +29,54 @@ class Dice(commands.Cog):
     def __init__(self, bot):
         self._bot: commands.Bot = bot
 
-    @commands.command(name="croll")
-    async def croll(self, context: commands.Context, bonus: int | None = None, *label):
-        response = f"{context.author.mention} :game_die:"
-
-        if bonus is None:
-            await context.send("Please specify bonus to make a roll.")
-            return
-
-        if not label:
-            label_text = "Dice"
-        else:
-            label_text = " ".join(label)
-
-        roll_result = roll(bonus)
-
-        response = f"{context.author.mention} :game_die:\n"
-        response += f"**{label_text}**: {roll_result.dice_string()}\n"
-        response += f"**Total**: {roll_result.total}\n"
-
-        if roll_result.critical_type is CriticalType.SUCCESS:
-            response += ":boom: *Critical success!*"
-        elif roll_result.critical_type is CriticalType.FAILURE:
-            response += ":thumbsdown: *Critical failure!*"
-
-        await context.send(response)
-
     @commands.command(name="roll", aliases=["r"])
     async def roll_cmd(self, context: commands.Context, *, dice: str = "1d20"):
-        roll_result = d20.roll(dice, allow_comments=True, stringifier=VerboseMDStringifier())
-
-        response = f"{context.author.mention}  :game_die:\n{str(roll_result)}"
-
-        await context.send(response)
+        if self._is_d6_command(dice):
+            await self._roll_single_six(context, dice)
+        else:
+            await self._roll_single(context, dice)
 
     @commands.command(name="multiroll", aliases=["rr"])
-    async def rr(self, ctx, iterations: int, *, dice):
-        await self._roll_many(ctx, iterations, dice)
+    async def rr(self, context: commands.Context, iterations: int, *, dice):
+        await self._roll_many(context, iterations, dice)
+        
+    @staticmethod
+    def _is_d6_command(dice: str) -> bool:
+        pattern = r'^\d+\s*d\s*(?:\+\s*\d+)?(?:\s+.+)?$'
+        
+        if re.match(pattern, dice):
+            return True
+        
+        return False
+        
+    @staticmethod
+    async def _roll_single_six(context: commands.Context, dice: str):
+        try:
+            roll_result = roll(dice)
+            response = f"{context.author.mention}  :game_die:\n{str(roll_result)}"
+        except ValueError as e:
+            response = f"Error in roll: {str(e)}"
+        except Exception as e:
+            response = f"Unhandled error: {str(e)}"
+            
+        await context.send(response)
+        
+    @staticmethod
+    async def _roll_single(context: commands.Context, dice: str):
+        try:
+            roll_result = d20.roll(dice, allow_comments=True, stringifier=VerboseMDStringifier())
+            response = f"{context.author.mention}  :game_die:\n{str(roll_result)}"
+        except d20.errors.RollSyntaxError as e:
+            response = f"Error in roll: {str(e)}"
+        except Exception as e:
+            response = f"Unhandled error: {str(e)}"
+        
+        await context.send(response)
 
     @staticmethod
-    async def _roll_many(ctx, iterations, roll_str):
+    async def _roll_many(context: commands.Context, iterations, roll_str):
         if iterations < 1 or iterations > 100:
-            return await ctx.send("Too many or too few iterations.")
+            return await context.send("Too many or too few iterations.")
 
         results = []
         ast = d20.parse(roll_str, allow_comments=True)
@@ -92,7 +100,7 @@ class Dice(commands.Cog):
             one_result = str(results[0])
             out = f"{header}\n{one_result}\n[{len(results) - 1} results omitted for output size.]\n{footer}"
 
-        await ctx.send(f"{ctx.author.mention}\n{out}")
+        await context.send(f"{context.author.mention}\n{out}")
 
     async def cog_before_invoke(self, context: commands.Context):
         await context.message.delete()
