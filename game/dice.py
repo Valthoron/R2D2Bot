@@ -38,6 +38,14 @@ class RollResult:
     def __str__(self) -> str:
         string = self.dice_string()
         return string
+    
+    def label_string(self) -> str:
+        string = f"{len(self._rolls)}D"
+        
+        if self._pips > 0:
+            string += f"+{self._pips}"
+        
+        return string
 
     def dice_string(self) -> str:
         string = ""

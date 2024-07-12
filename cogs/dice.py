@@ -53,7 +53,7 @@ class Dice(commands.Cog):
     async def _roll_single_six(context: commands.Context, dice: str):
         try:
             roll_result = roll(dice)
-            response = f"{context.author.mention}  :game_die:\n{str(roll_result)}"
+            response = f"{context.author.mention}  :game_die:  {roll_result.label_string()}  \n{(roll_result.dice_string())}"
         except ValueError as e:
             response = f"Error in roll: {str(e)}"
         except Exception as e:
