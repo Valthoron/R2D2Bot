@@ -45,15 +45,13 @@ class RollResult:
         if self._pips > 0:
             string += f"+{self._pips}"
         
+        if self._label:
+            string += f" ({self._label})"
+        
         return string
 
     def dice_string(self) -> str:
-        string = ""
-        
-        if self._label:
-            string += f"**{self._label}:** "
-        else:
-            string += "**Result:** "
+        string = "**Result:** "
             
         string += f"({', '.join(map(str, self._rolls))})"
         
