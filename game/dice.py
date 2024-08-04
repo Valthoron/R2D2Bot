@@ -55,20 +55,24 @@ class RollResult:
         else:
             string += "**Result:** "
             
-        string += f"{self._total} = ({', '.join(map(str, self._rolls))})"
+        string += f"({', '.join(map(str, self._rolls))})"
         
         if self._pips > 0:
             string += f" + {self._pips}"
         
         if len(self._exploding_rolls) > 0:
             string += f" + ({', '.join(map(str, self._exploding_rolls))})"
-            string += "\n:boom: *Exploding wild die*"
+        
+        string += f" = `{self._total}`"
+        
+        if len(self._exploding_rolls) > 0:
+            string += "\n:white_check_mark: *Exploding wild die*"
         elif self._rolls[0] == 1:
             if len(self._rolls) > 1:
                 highest_die = max(self._rolls[1:])
-                string += f"\n:exclamation: *Complication, or cancel dice for total = {self._total - highest_die - 1}*"
+                string += f"\n:x: *Complication, or cancel dice for total = `{self._total - highest_die - 1}`*"
             else:
-                string += "\n:exclamation: *Complication*"
+                string += "\n:x: *Complication*"
 
         return string
 
