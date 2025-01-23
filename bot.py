@@ -16,6 +16,11 @@ COGS = ["cogs.dice"]
 class Artoo(commands.Bot):
     def __init__(self, command_prefix, **options):
         super().__init__(command_prefix, **options)
+        
+    async def on_message(self, message):
+        ctx = await self.get_context(message)
+        if ctx.valid:
+            await bot.invoke(ctx)
 
 
 intents = discord.Intents(messages=True, message_content=True)
