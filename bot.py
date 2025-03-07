@@ -9,41 +9,40 @@ from dotenv import load_dotenv
 
 load_dotenv()
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-
-COGS = ["cogs.dice"]
+PROXY = os.getenv("PROXY") or None
 
 
 class Artoo(commands.Bot):
     def __init__(self, command_prefix, **options):
         super().__init__(command_prefix, **options)
-        
+
     async def on_message(self, message):
         ctx = await self.get_context(message)
         if ctx.valid:
             await bot.invoke(ctx)
 
+    async def on_ready(self):
+        print(f"{bot.user} has connected to Discord!")
+
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, CommandNotFound):
+            return
+
+        raise error
+
 
 intents = discord.Intents(messages=True, message_content=True)
-bot = Artoo(command_prefix="!", intents=intents, activity=discord.Game(name="Star Wars RPG D6"))
+bot = Artoo(command_prefix="!", intents=intents, activity=discord.Game(name="Star Wars RPG D6"), proxy=PROXY)
 
 
-@bot.event
-async def on_ready():
-    print(f"{bot.user} has connected to Discord!")
+async def main():
+    async with bot:
+        await bot.load_extension("cogs.dice")
+        await bot.start(DISCORD_BOT_TOKEN)
 
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, CommandNotFound):
-        return
-
-    raise error
-
-
-async def load_extensions():
-    for cog in COGS:
-        await bot.load_extension(cog)
-
-asyncio.run(load_extensions())
-
-bot.run(DISCORD_BOT_TOKEN)
+try:
+    event_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(event_loop)
+    event_loop.run_until_complete(main())
+except KeyboardInterrupt:
+    pass
