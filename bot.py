@@ -38,6 +38,7 @@ bot = Artoo(command_prefix="!", intents=intents, activity=discord.Game(name="Sta
 async def main():
     async with bot:
         await bot.load_extension("cogs.dice")
+        await bot.load_extension("cogs.species_pictures")
         await bot.start(DISCORD_BOT_TOKEN)
 
 try:

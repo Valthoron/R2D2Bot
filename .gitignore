@@ -132,5 +132,10 @@ dmypy.json
 Thumbs.db
 .DS_Store
 
+# IDE stuff
+.vscode
+
 # Project-specific files
-google-edgerunner.json
+data/**
+!data/*/
+!.gitkeep
