@@ -7,9 +7,11 @@ R2-D2 Bot gets inspiration and uses snippets of code from [Avrae](https://avrae.
 
 ## Dependencies
 - Python 3.10.5
-- [discord.py](https://github.com/Rapptz/discord.py) 2.4.0
+- [discord.py](https://github.com/Rapptz/discord.py) 2.5.2
 - [d20](https://github.com/avrae/d20) 1.1.2
-- [python-dotenv](https://github.com/theskumar/python-dotenv) 1.0.1
+- [python-dotenv](https://github.com/theskumar/python-dotenv) 1.1.0
+- [aiohttp-socks](https://github.com/romis2012/aiohttp-socks) 0.10.1
+- [Pillow](https://python-pillow.github.io/) 11.2.1
 
 Earlier versions may also be compatible.
 
