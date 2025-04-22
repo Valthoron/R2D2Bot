@@ -19,10 +19,10 @@ class Artoo(commands.Bot):
     async def on_message(self, message):
         ctx = await self.get_context(message)
         if ctx.valid:
-            await bot.invoke(ctx)
+            await self.invoke(ctx)
 
     async def on_ready(self):
-        print(f"{bot.user} has connected to Discord!")
+        print(f"{self.user} has connected to Discord!")
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, CommandNotFound):
