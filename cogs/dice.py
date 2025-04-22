@@ -30,25 +30,28 @@ class Dice(commands.Cog):
         self._bot: commands.Bot = bot
 
     @commands.command(name="roll", aliases=["r"])
-    async def roll_cmd(self, context: commands.Context, *, dice: str = "1d20"):
+    async def roll_single(self, context: commands.Context, *, dice: str = "1d20"):
         if self._is_d6_command(dice):
             await self._roll_single_six(context, dice)
         else:
-            await self._roll_single(context, dice)
+            await self._roll_single_generic(context, dice)
 
     @commands.command(name="multiroll", aliases=["rr"])
-    async def rr(self, context: commands.Context, iterations: int, *, dice):
-        await self._roll_many(context, iterations, dice)
-        
+    async def roll_multi(self, context: commands.Context, iterations: int, *, dice):
+        if self._is_d6_command(dice):
+            await self._roll_multi_six(context, iterations, dice)
+        else:
+            await self._roll_multi_generic(context, iterations, dice)
+
     @staticmethod
     def _is_d6_command(dice: str) -> bool:
         pattern = r'^\d+\s*[dD]\s*(?:\+\s*\d+)?(?:\s+.+)?$'
-        
+
         if re.match(pattern, dice):
             return True
-        
+
         return False
-        
+
     @staticmethod
     async def _roll_single_six(context: commands.Context, dice: str):
         try:
@@ -58,11 +61,11 @@ class Dice(commands.Cog):
             response = f"Error in roll: {str(e)}"
         except Exception as e:
             response = f"Unhandled error: {str(e)}"
-            
+
         await context.send(response)
-        
+
     @staticmethod
-    async def _roll_single(context: commands.Context, dice: str):
+    async def _roll_single_generic(context: commands.Context, dice: str):
         try:
             roll_result = d20.roll(dice, allow_comments=True, stringifier=VerboseMDStringifier())
             response = f"{context.author.mention}  :game_die:\n{str(roll_result)}"
@@ -70,16 +73,37 @@ class Dice(commands.Cog):
             response = f"Error in roll: {str(e)}"
         except Exception as e:
             response = f"Unhandled error: {str(e)}"
-        
+
         await context.send(response)
 
     @staticmethod
-    async def _roll_many(context: commands.Context, iterations, roll_str):
-        if iterations < 1 or iterations > 100:
-            return await context.send("Too many or too few iterations.")
+    async def _roll_multi_six(context: commands.Context, iterations, dice):
+        try:
+            if (iterations < 1) or (iterations > 100):
+                return await context.send("Number of iterations should be from 1 to 100.")
+
+            results = []
+
+            for _ in range(iterations):
+                roll_result = roll(dice)
+                results.append(roll_result)
+
+            response = f"{context.author.mention}  :game_die:  {iterations} times {results[0].label_string()}\n"
+            response += "\n".join(r.dice_string(use_newline=False) for r in results)
+        except ValueError as e:
+            response = f"Error in roll: {str(e)}"
+        except Exception as e:
+            response = f"Unhandled error: {str(e)}"
+
+        await context.send(response)
+
+    @staticmethod
+    async def _roll_multi_generic(context: commands.Context, iterations, dice):
+        if (iterations < 1) or (iterations > 100):
+            return await context.send("Number of iterations should be from 1 to 100.")
 
         results = []
-        ast = d20.parse(roll_str, allow_comments=True)
+        ast = d20.parse(dice, allow_comments=True)
         roller = d20.Roller(context=PersistentRollContext())
 
         for _ in range(iterations):
@@ -93,14 +117,13 @@ class Dice(commands.Cog):
             header = f"{ast.comment}: {header}"
 
         result_strs = "\n".join(str(o) for o in results)
-
         out = f"{header}\n{result_strs}\n{footer}"
 
         if len(out) > 1500:
             one_result = str(results[0])
             out = f"{header}\n{one_result}\n[{len(results) - 1} results omitted for output size.]\n{footer}"
 
-        await context.send(f"{context.author.mention}\n{out}")
+        await context.send(f"{context.author.mention}  :game_die:\n{out}")
 
     async def cog_before_invoke(self, context: commands.Context):
         await context.message.delete()

@@ -11,12 +11,12 @@ class CriticalType(IntEnum):
 
 
 class RollResult:
-    def __init__(self, rolls: int, pips: int, exploding_rolls: int, label: str|None):
+    def __init__(self, rolls: int, pips: int, exploding_rolls: int, label: str | None):
         self._rolls = rolls
         self._pips = pips
         self._exploding_rolls = exploding_rolls
         self._label = label
-        
+
         self._total = sum(rolls) + sum(exploding_rolls) + pips
 
     @property
@@ -26,10 +26,14 @@ class RollResult:
     @property
     def pips(self) -> int:
         return self._pips
-    
+
     @property
     def exploding_rolls(self) -> int:
         return self._exploding_rolls
+
+    @property
+    def label(self) -> str | None:
+        return self._label
 
     @property
     def total(self) -> int:
@@ -38,45 +42,52 @@ class RollResult:
     def __str__(self) -> str:
         string = self.dice_string()
         return string
-    
+
     def label_string(self) -> str:
         string = f"{len(self._rolls)}D"
-        
+
         if self._pips > 0:
             string += f"+{self._pips}"
-        
+
         if self._label:
             string += f" ({self._label})"
-        
+
         return string
 
-    def dice_string(self) -> str:
-        string = "**Result:** "
-            
-        string += f"({', '.join(map(str, self._rolls))})"
-        
+    def dice_string(self, *, use_newline=True) -> str:
+        string = "**Result:** (**" + str(self._rolls[0]) + "**"
+
+        if len(self._rolls) > 1:
+            string += ", " + ", ".join(map(str, self._rolls[1:]))
+
+        string += ")"
+
         if self._pips > 0:
             string += f" + {self._pips}"
-        
+
         if len(self._exploding_rolls) > 0:
-            string += f" + ({', '.join(map(str, self._exploding_rolls))})"
-        
+            string += f" + ({", ".join(map(str, self._exploding_rolls))})"
+
         string += f" = `{self._total}`"
-        
+
+        separator = "\n"
+        if not use_newline:
+            separator = "  "
+
         if len(self._exploding_rolls) > 0:
-            string += "\n:white_check_mark: *Exploding wild die*"
+            string += separator + ":white_check_mark: *Exploding wild die*"
         elif self._rolls[0] == 1:
             if len(self._rolls) > 1:
                 highest_die = max(self._rolls[1:])
-                string += f"\n:x: *Complication, or cancel dice for total = `{self._total - highest_die - 1}`*"
+                string += separator + f":x: *Complication, or cancel dice for total = `{self._total - highest_die - 1}`*"
             else:
-                string += "\n:x: *Complication*"
+                string += separator + ":x: *Complication*"
 
         return string
 
 
 def roll(dice: str):
-    pattern = r'(\d+)\s*[dD]\s*(?:\+\s*(\d+))?(?:\s+(.+))?$'
+    pattern = r"(\d+)\s*[dD]\s*(?:\+\s*(\d+))?(?:\s+(.+))?$"
     match = re.match(pattern, dice)
     if match:
         die_count = int(match.group(1))
@@ -84,20 +95,20 @@ def roll(dice: str):
         label = match.group(3).strip() if match.group(3) else None
     else:
         raise ValueError("Invalid dice string.")
-    
+
     if die_count < 1 or die_count > 100:
         raise ValueError("Invalid die count. Must be at least 1 and at most 100.")
-    
+
     if pip_count < 0 or pip_count > 2:
         raise ValueError("Invalid pip count. Must be at least 0 (or omitted) and at most 2.")
-    
+
     rolls = [random.choice(range(1, 7)) for _ in range(die_count)]
-    
+
     wild_die = rolls[0]
     exploding_rolls = []
-    
+
     while (wild_die == 6):
         wild_die = random.choice(range(1, 7))
         exploding_rolls.append(wild_die)
-    
+
     return RollResult(rolls, pip_count, exploding_rolls, label)
