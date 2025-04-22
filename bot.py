@@ -3,6 +3,7 @@ import os
 
 import discord
 
+from aiohttp_socks import ProxyConnector
 from discord.ext import commands
 from discord.ext.commands import CommandNotFound
 from dotenv import load_dotenv
@@ -31,15 +32,20 @@ class Artoo(commands.Bot):
         raise error
 
 
-intents = discord.Intents(messages=True, message_content=True)
-bot = Artoo(command_prefix="!", intents=intents, activity=discord.Game(name="Star Wars RPG D6"), proxy=PROXY)
-
-
 async def main():
-    async with bot:
-        await bot.load_extension("cogs.dice")
-        await bot.load_extension("cogs.species_pictures")
-        await bot.start(DISCORD_BOT_TOKEN)
+    intents = discord.Intents(messages=True, message_content=True)
+    proxy = None
+    connector = None
+
+    if (PROXY and PROXY.startswith("socks5://")):
+        connector = ProxyConnector.from_url(PROXY)
+    elif (PROXY):
+        proxy = PROXY
+
+    bot = Artoo(command_prefix="!", intents=intents, activity=discord.Game(name="Star Wars RPG D6"), proxy=proxy, connector=connector)
+    await bot.load_extension("cogs.dice")
+    await bot.load_extension("cogs.species_pictures")
+    await bot.start(DISCORD_BOT_TOKEN)
 
 try:
     event_loop = asyncio.new_event_loop()
